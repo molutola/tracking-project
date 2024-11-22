@@ -43,7 +43,7 @@
               fetch(
                 `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
                   destination
-                )}&key=AIzaSyAJl-ppMaP_1kCWRafHeQs2p6gHwM5LPq4`
+                )}&key=`
               )
                 .then((response) => response.json())
                 .then((data) => {
