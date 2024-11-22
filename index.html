@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tracking Form</title>
+  </head>
+  <body>
+    <form id="trackingForm">
+      <label for="phoneNumber">Phone Number:</label>
+      <input
+        type="text"
+        id="phoneNumber"
+        name="phoneNumber"
+        required
+      /><br /><br />
+      <label for="destination">Destination Address:</label>
+      <input
+        type="text"
+        id="destination"
+        name="destination"
+        required
+      /><br /><br />
+      <button type="submit">Submit</button>
+    </form>
+
+    <script>
+      document
+        .getElementById('trackingForm')
+        .addEventListener('submit', function (event) {
+          event.preventDefault()
+
+          // Get the user's current location
+          navigator.geolocation.getCurrentPosition(
+            function (position) {
+              const startLat = position.coords.latitude
+              const startLng = position.coords.longitude
+
+              // Get the destination address
+              const destination = document.getElementById('destination').value
+
+              // Convert the destination address to coordinates
+              fetch(
+                `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+                  destination
+                )}&key=AIzaSyAJl-ppMaP_1kCWRafHeQs2p6gHwM5LPq4`
+              )
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data.status === 'OK') {
+                    const endLat = data.results[0].geometry.location.lat
+                    const endLng = data.results[0].geometry.location.lng
+
+                    const trackingData = {
+                      phoneNumber: document.getElementById('phoneNumber').value,
+                      startLat: startLat,
+                      startLng: startLng,
+                      endLat: endLat,
+                      endLng: endLng,
+                    }
+
+                    // Send the tracking data to the server
+                    fetch('http://localhost:8000/api/tracking', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(trackingData),
+                    })
+                      .then((response) => response.json())
+                      .then((data) => {
+                        console.log('Success:', data)
+                      })
+                      .catch((error) => {
+                        console.error('Error:', error)
+                      })
+                  } else {
+                    console.error('Geocoding error:', data.status)
+                  }
+                })
+                .catch((error) => {
+                  console.error('Error:', error)
+                })
+            },
+            function (error) {
+              console.error('Geolocation error:', error)
+            }
+          )
+        })
+    </script>
+  </body>
+</html>
+<!-- <!DOCTYPE html>
+<html>
+  <head>
+    <title>Tracking Setup</title>
+  </head>
+  <body>
+    <h1>Setup Tracking</h1>
+    <form id="trackingForm">
+      <label for="phoneNumber">Phone Number:</label>
+      <input
+        type="text"
+        id="phoneNumber"
+        name="phoneNumber"
+        required
+      /><br /><br />
+      <label for="startLat">Start Latitude:</label>
+      <input type="text" id="startLat" name="startLat" required /><br /><br />
+      <label for="startLng">Start Longitude:</label>
+      <input type="text" id="startLng" name="startLng" required /><br /><br />
+      <label for="endLat">End Latitude:</label>
+      <input type="text" id="endLat" name="endLat" required /><br /><br />
+      <label for="endLng">End Longitude:</label>
+      <input type="text" id="endLng" name="endLng" required /><br /><br />
+      <button type="submit">Submit</button>
+    </form>
+
+    <script>
+      document
+        .getElementById('trackingForm')
+        .addEventListener('submit', function (event) {
+          event.preventDefault()
+          const data = {
+            phoneNumber: document.getElementById('phoneNumber').value,
+            startLat: document.getElementById('startLat').value,
+            startLng: document.getElementById('startLng').value,
+            endLat: document.getElementById('endLat').value,
+            endLng: document.getElementById('endLng').value,
+          }
+
+          fetch('http://localhost:8000/api/tracking', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log('Success:', data)
+            })
+            .catch((error) => {
+              console.error('Error:', error)
+            })
+        })
+    </script>
+  </body>
+</html> -->
