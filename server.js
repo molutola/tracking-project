@@ -1,6 +1,9 @@
 var hostname = process.env.HOSTNAME || 'localhost'
 const express = require('express')
 const cors = require('cors')
+var bodyParser = require('body-parser')
+var errorHandler = require('errorhandler')
+var methodOverride = require('method-override')
 const app = express()
 const port = 8000
 
