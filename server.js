@@ -1,16 +1,15 @@
-var hostname = process.env.HOSTNAME || 'localhost'
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
-var bodyParser = require('body-parser')
-var errorHandler = require('errorhandler')
-var methodOverride = require('method-override')
+const bodyParser = require('body-parser')
+const methodOverride = require('method-override')
+const MongoClient = require('mongodb').MongoClient
 const app = express()
 const port = 8000
 
-app.use(cors()) // Enable CORS for all routes
+app.use(cors())
 app.use(express.json())
 
-let MongoClient = require('mongodb').MongoClient
 const connectionString = 'mongodb://localhost:27017'
 let db
 
@@ -27,9 +26,7 @@ MongoClient.connect(connectionString, {
 app.post('/api/tracking', (req, res) => {
   const data = req.body
   console.log('Received data:', data)
-  res.json({ message: 'Data received successfully', data })
 
-  // Save data to MongoDB
   db.collection('tracking').insertOne(data, (err, result) => {
     if (err) return res.status(500).send('Error inserting data.')
     res.json({
@@ -39,10 +36,36 @@ app.post('/api/tracking', (req, res) => {
   })
 })
 
+app.post('/api/location', (req, res) => {
+  const data = req.body
+  console.log('Received location update:', data)
+
+  db.collection('locationUpdates').insertOne(data, (err, result) => {
+    if (err) return res.status(500).send('Error inserting data.')
+    res.json({
+      message: 'Location update received and saved successfully',
+      data: result.ops[0],
+    })
+  })
+})
+
+app.post('/api/battery', (req, res) => {
+  const data = req.body
+  console.log('Received battery update:', data)
+
+  db.collection('batteryUpdates').insertOne(data, (err, result) => {
+    if (err) return res.status(500).send('Error inserting data.')
+    res.json({
+      message: 'Battery update received and saved successfully',
+      data: result.ops[0],
+    })
+  })
+})
+
 app.use(methodOverride())
 app.use(bodyParser())
 app.use(express.static(__dirname + '/public'))
-app.use(errorHandler())
 
-console.log('Simple static server listening at http://' + hostname + ':' + port)
-app.listen(port)
+app.listen(port, () => {
+  console.log(`Server listening at http://localhost:${port}`)
+})
