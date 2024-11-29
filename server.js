@@ -1,4 +1,3 @@
-require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser')
@@ -21,7 +20,10 @@ MongoClient.connect(connectionString, {
     db = client.db('trackingData')
     console.log('Connected to Database')
   })
-  .catch((error) => console.error(error))
+  .catch((error) => {
+    console.error('Database connection error:', error)
+    process.exit(1) // Exit the process if the database connection fails
+  })
 
 app.post('/api/tracking', (req, res) => {
   const data = req.body
@@ -62,28 +64,42 @@ app.post('/api/battery', (req, res) => {
   })
 })
 
-// New endpoint to get the latest client details
 app.get('/api/getClientDetails', (req, res) => {
   db.collection('tracking')
-    .find()
-    .sort({ _id: -1 })
-    .limit(1)
-    .toArray((err, result) => {
-      if (err) return res.status(500).send('Error fetching client details.')
-      if (result.length === 0)
-        return res.status(404).send('No client details found.')
-      const latestClient = result[0]
-      res.json({
-        clientId: latestClient.clientId,
-        destLat: latestClient.endLat,
-        destLng: latestClient.endLng,
-        phoneNumber: latestClient.phoneNumber,
-      })
+    .findOne({}, { sort: { _id: -1 } }) // Sort by `_id` in descending order to get the latest entry
+    .then((data) => {
+      if (!data) {
+        return res.status(404).json({ message: 'No tracking data found' })
+      }
+      res.json(data)
+    })
+    .catch((err) => {
+      console.error('Error retrieving data:', err)
+      res.status(500).send('Error retrieving data.')
     })
 })
 
+// // New endpoint to get the latest client details
+// app.get('/api/getClientDetails', (req, res) => {
+//   db.collection('tracking')
+//     .find()
+//     .sort({ _id: -1 })
+//     .limit(1)
+//     .toArray((err, result) => {
+//       if (err) return res.status(500).send('Error fetching client details.')
+//       if (result.length === 0)
+//         return res.status(404).send('No client details found.')
+//       const latestClient = result[0]
+//       res.json({
+//         clientId: latestClient.clientId,
+//         destLat: latestClient.endLat,
+//         destLng: latestClient.endLng,
+//         phoneNumber: latestClient.phoneNumber,
+//       })
+//     })
+// })
+
 app.use(methodOverride())
-app.use(bodyParser())
 app.use(express.static(__dirname + '/public'))
 
 app.listen(port, () => {
