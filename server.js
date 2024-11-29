@@ -38,6 +38,15 @@ app.post('/api/tracking', (req, res) => {
   })
 })
 
+app.get('/api/tracking', (req, res) => {
+  db.collection('tracking')
+    .find({})
+    .toArray((err, result) => {
+      if (err) return res.status(500).send('Error fetching data.')
+      res.json(result)
+    })
+})
+
 app.post('/api/location', (req, res) => {
   const data = req.body
   console.log('Received location update:', data)
