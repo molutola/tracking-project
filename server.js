@@ -79,26 +79,6 @@ app.get('/api/getClientDetails', (req, res) => {
     })
 })
 
-// // New endpoint to get the latest client details
-// app.get('/api/getClientDetails', (req, res) => {
-//   db.collection('tracking')
-//     .find()
-//     .sort({ _id: -1 })
-//     .limit(1)
-//     .toArray((err, result) => {
-//       if (err) return res.status(500).send('Error fetching client details.')
-//       if (result.length === 0)
-//         return res.status(404).send('No client details found.')
-//       const latestClient = result[0]
-//       res.json({
-//         clientId: latestClient.clientId,
-//         destLat: latestClient.endLat,
-//         destLng: latestClient.endLng,
-//         phoneNumber: latestClient.phoneNumber,
-//       })
-//     })
-// })
-
 app.use(methodOverride())
 app.use(express.static(__dirname + '/public'))
 

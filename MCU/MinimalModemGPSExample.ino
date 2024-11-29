@@ -30,7 +30,7 @@ TinyGsm modem(SerialAT);
 const char* ssid = "John3v16";
 const char* password = "moyinoluwa";
 
-const char* server = "54.175.245.132";
+const char* server = "54.156.133.104";
 const int port = 8000;
 
 const char apn[]  = "wholesale";  // APN for Mint Mobile
@@ -44,10 +44,11 @@ String phoneNumber;
 const String message = "Hello, this is a test SMS from ESP32!";
 
 // Backend server URL
-const char serverUrl[] = "http://localhost:8000/api/location";
-const char batteryUrl[] = "http://localhost:8000/api/battery";
+const char* serverUrl = "http://54.175.245.132:8000/api/tracking";
+
+const char* batteryUrl = "http://54.175.245.132:8000/api/battery";
 const char adminPhoneNumber[] = "+16233209369";
-const char clientDetailsUrl[] = "http://localhost:8000/api/getClientDetails";
+const char* clientDetailsUrl = "http://54.156.133.104:8000/api/getClientDetails";
 
 float lat2 = 0, lon2 = 0, speed2 = 0, alt2 = 0, accuracy2 = 0;
 int vsat2 = 0, usat2 = 0, year2 = 0, month2 = 0, day2 = 0, hour2 = 0, min2 = 0, sec2 = 0;
@@ -67,7 +68,7 @@ struct ClientDetails {
 };
 
 ClientDetails getClientDetailsAndLocation() {
-    ClientDetails details = {"", 0.0, 0.0};
+    ClientDetails details = {"", 0.0, 0.0, ""};
 
     if (WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
@@ -75,23 +76,29 @@ ClientDetails getClientDetailsAndLocation() {
         int httpCode = http.GET();
 
         if (httpCode > 0) {
-            String payload = http.getString();
-            Serial.print("Server response: ");
-            Serial.println(payload);
+            if (httpCode == HTTP_CODE_OK) {
+                String payload = http.getString();
+                Serial.print("Server response: ");
+                Serial.println(payload);
 
-            // Parse the JSON response
-            DynamicJsonDocument doc(1024);
-            DeserializationError error = deserializeJson(doc, payload);
-            if (error) {
-                Serial.print("Failed to parse JSON: ");
-                Serial.println(error.c_str());
-                return details;
+                // Parse the JSON response
+                DynamicJsonDocument doc(1024);
+                DeserializationError error = deserializeJson(doc, payload);
+                if (error) {
+                    Serial.print("Failed to parse JSON: ");
+                    Serial.println(error.c_str());
+                    return details;
+                }
+
+                // Map JSON fields to struct fields
+                details.clientId = doc["clientId"].as<String>();
+                details.destLat = doc["endLat"].as<double>();
+                details.destLng = doc["endLng"].as<double>();
+                details.phoneNumber = doc["phoneNumber"].as<String>();
+            } else {
+                Serial.print("Unexpected HTTP response code: ");
+                Serial.println(httpCode);
             }
-
-            details.clientId = doc["clientId"].as<String>();
-            details.destLat = doc["destLat"].as<double>();
-            details.destLng = doc["destLng"].as<double>();
-            details.phoneNumber = doc["phoneNumber"].as<String>();
         } else {
             Serial.print("Error on HTTP request: ");
             Serial.println(httpCode);
@@ -101,7 +108,6 @@ ClientDetails getClientDetailsAndLocation() {
     } else {
         Serial.println("WiFi not connected");
     }
-
     return details;
 }
 
